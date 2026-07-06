@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Debugging, Type Checks &amp; Refactoring</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+<style>
+  html, body { background: #ffffff; }
+  .reveal { background: #ffffff; }
+  .reveal .slides section { text-align: left; }
+  .reveal .slides section h1,
+  .reveal .slides section h2 { text-align: center; }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  header img { width: 100%; }
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  footer img.footer-bg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    transform: rotate(180deg);
+  }
+  footer .footer-content {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0px 50px;
+    font-size: 1.8em;
+    font-family: sans-serif;
+    color: #333;
+  }
+  footer { height: 80px; width: auto; }
+  .footer-content img { height: 60px; width: auto; }
+  .reveal .slides { top: 60px; }
+p {
+  font-size: 0.9em;
+}
+</style>
+</head>
+<body>
+
+<header><img src="header.png" alt=""></header>
+<footer>
+  <img class="footer-bg" src="header.png" alt="">
+  <div class="footer-content">
+    <img src="academis_logo.png" alt="Academis logo">
+    <span>Dr. Kristian Rother</span>
+    <span>www.academis.eu</span>
+  </div>
+</footer>
+
+<div class="reveal">
+  <div class="slides">
+
+    <section>
+      <section>
+        <h1>Debugging</h1>
+        <p>three techniques to fix bugs in Python code</p>
+        <h3>Dr. Kristian Rother</h3>
+        <a href="https://www.academis.eu">www.academis.eu</a>
+      </section>
+
+      <section>
+        <h3>Goals of debugging</h3>
+        <p></p>
+        <ul>
+          <li>find out why a bug occurs</li>
+          <li>make sure the bug never comes back</li>
+          <li>get ideas how to improve the program</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Why debugging is necessary</h3>
+        <img src="input_output_map.svg">
+        <p>the amount of possible inputs and outputs is huge. It is practically impossible to verify that all pairs are correct.</p>
+      </section>
+
+      <section>
+        <h3>Error propagation</h3>
+        <img src="bug_propagation.svg">
+        <p>Defects change the <strong>internal state</strong> of the program. They may become apparent to the user much later.</p>
+      </section>
+
+      <section>
+        <h3>Dobutsu Shogi</h3>
+        <p><a href="https://github.com/krother/shogi">github.com/krother/shogi</a></p>
+        <p>Code in <code>debugging/</code></p>
+      </section>
+
+      <section>
+        <h3>Breakpoints</h3>
+        <ul>
+          <li>add <code>breakpoint()</code> to your code</li>
+          <li>run the program</li>
+          <li>at the breakpoint you can inspect and modify variables or step through the program in slow motion</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Debugger commands</h3>
+
+        <table>
+          <thead>
+            <tr><th>command</th><th>explanation</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>l</td><td>list code lines</td></tr>
+            <tr><td>n</td><td>execute next line</td></tr>
+            <tr><td>s</td><td>step into function</td></tr>
+            <tr><td>c</td><td>continue execution</td></tr>
+            <tr><td>q</td><td>quit</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h3>Tracer bullets</h3>
+        <p>inspect the internal state with:</p>
+        <pre>
+
+          from pprint import pprint
+
+          pprint(field)
+        </pre>
+        <p>Add the command to <code>make_move()</code> in <code>app.py</code>.</p>
+      </section>
+
+      <section>
+        <h3>Write test against the bug</h3>
+        <p>
+          Add another test in <code>test_shogi.py</code>
+          that tests the buggy situations <strong>before fixing the bug</strong>.
+        </p>
+      </section>
+
+      <section>
+        <h3>Links</h3>
+        <ul>
+          <li>slides on: <a href="https://www.academis.eu/shogi">www.academis.eu/shogi</a></li>
+          <li>solutions on: <a href="https://www.github.com/krother/shogi">www.github.com/krother/shogi</a></li>
+          <li><a href="https://www.academis.eu/python_basics/debugging/README.html">easy exercise</a></li>
+          <li><a href="https://www.academis.eu/advanced_python/error_handling/debugging.html">intermediate exercise</a></li>
+          <li><a href="https://www.youtube.com/watch?v=04paHt9xG9U"></a>Video Tutorial (PyData 20217)</li>          
+        </ul>
+      </section>
+
+    </section>
+
+    <section>
+      <section>
+        <h2>Type Checking Python Code</h2>
+        <p>practical hints for getting started</p>
+        <h3>Dr. Kristian Rother</h3>
+        <a href="https://www.academis.eu">www.academis.eu</a>
+      </section>
+    
+
+      <section>
+        <h3>Goals of this workshop</h3>
+        <ul>
+          <li>run a type checker</li>
+          <li>annotate variables</li>
+          <li>define types</li>
+          <li>nested types</li>
+          <li>annotate functions</li>
+          <li>ignore annotations</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Dobutsu Shogi</h3>
+        <p><a href="https://github.com/krother/shogi">github.com/krother/shogi</a></p>
+        <p>Code in <code>type_annotation/</code></p>
+      </section>
+
+      <section>
+        <h3>Run a type checker</h3>
+        <p><strong>ty</strong> is a fast type checker written in Rust.</p>
+        <pre>
+
+          uv add ty
+          uv run ty check .
+        </pre>
+        or
+        <pre>
+
+          pip install ty
+          ty check .
+        </pre>
+      </section>
+
+      <section>
+        <h3>Annotate variables</h3>
+        <p>some examples:</p>
+        <pre>
+
+  running: bool = True
+
+  piece: str = "lion"
+
+  player: int|None = 1
+        </pre>
+      </section>
+
+      <section>
+        <h3>Nested types</h3>
+        <p>Specify what tuples, lists and dictionaries should contain:</p>
+        <pre>
+
+  position: tuple[int, int]
+
+  names: list[str]
+
+  field: list[list[tuple[str, int|None]]]
+        </pre>
+      </section>
+
+      <section>
+        <h3>Literals</h3>
+        <p>Literals protect you from typos!</p>
+        <pre>
+
+  from typing import Literal
+
+  Player = Literal[1, -1]
+
+  Piece = Literal["lion", "giraffe", "elephant", "chick"]
+        </pre>
+      </section>
+
+      <section>
+        <h3>Define types</h3>
+        <p>Enhance readability with more precise types:</p>
+        <pre>
+
+  Position = tuple[int, int] 
+  position: Position = (1, 2)
+
+  Field = list[list[tuple[Piece, Player|None]]]
+        </pre>
+      </section>
+
+      <section>
+        <h3>Annotate functions #1</h3>
+        <p>Annotating function <strong>parameters</strong> and <strong>return types</strong> is a great starting point:</p>
+        <pre>
+
+  def add(a: int, b: int) -> int:
+        </pre>
+      </section>
+
+      <section>
+        <h3>Annotate functions #2</h3>
+        <p>Annotating function <strong>parameters</strong> and <strong>return types</strong>:</p>
+        <pre>
+
+  def execute_move(field: Field,
+                   player: Player,
+                   move: tuple[Position, Position]
+                   ) -> tuple[Field, Player, str]:
+        </pre>
+      </section>
+
+      <section>
+        <h3>Special types</h3>
+        <p>Some types need to be imported from the <strong>typing</strong> module:</p>
+        <pre>
+
+  from typing import (
+    Any,         # placeholder that matches everything
+    Callable,    # function
+    Sequence,    # lists, generators, files etc.
+    cast         # function to convert type annotations (ugly)
+  )
+        </pre>
+      </section>
+
+      <section>
+        <h3>Ignoring types</h3>
+        <p>Sometimes types are ugly to resolve and you may not want to check them:</p>
+        <pre>
+
+  fruit: str = "apple"
+  fruit = 42  # type: ignore
+        </pre>
+      </section>
+
+      <section>
+        <h3>Links</h3>
+        <ul>
+          <li><a href="https://www.mypy-lang.org/">mypy</a> - a slower type checker that works with most libraries</li>
+          <li><a href="https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance">pylance</a> - VS Code plugin that checks types as you write code</li>
+        </ul>
+      </section>
+  </section>
+      
+    <section>
+      <section>
+        <h2>Refactoring</h2>
+        <p>practical exercise</p>
+        <h3>Dr. Kristian Rother</h3>
+        <a href="https://www.academis.eu">www.academis.eu</a>
+      </section>
+    
+      <section>
+        <h3>Goals of this workshop</h3>
+        <ul>
+          <li>identify code smells</li>
+          <li>practise refactoring</li>
+          <li>2-3 small refactoring</li>
+          <li>1 larger refactoring</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Dobutsu Shogi</h3>
+        <p><a href="https://github.com/krother/shogi">github.com/krother/shogi</a></p>
+        <p>Code in <code>type_annotation/</code></p>
+      </section>
+
+      <section>
+        <h3>Inspect code</h3>
+        <p>Take a look at <strong>shogi.py</strong></p>
+        <p>What do you not like about it?</p>
+      </section>
+
+      <section>
+        <h3>Small Refactorings</h3>
+        <nl>
+          <li>run tests</li>
+          <li>modify code</li>
+          <li>run tests again</li>
+        </nl>
+        <p>Small refactorings should be done within a few minutes</p>
+      </section>
+
+      <section>
+        <h3>Examples of Small Refactorings</h3>
+        <ul>
+          <li>rename a variable</li>
+          <li>extract a function</li>
+          <li>re-organize a loop</li>
+        </ul>
+        <p>Small refactorings should be doable within a few minutes</p>
+      </section>
+
+      <section>
+        <h3>Practise</h3>
+        <p>Run the tests with</p>
+        <pre>
+
+  uv run pytest
+        </pre>
+        <p>or</p>
+        <pre>
+
+  pip install pytest
+
+  pytest
+        </pre>
+      </section>
+
+      <section>
+        <h3>Medium refactorings</h3>
+        <ul>
+          <li>may take up to 1 hour</li>
+          <li>may change the interface</li>
+          <li>might require editing tests</li>
+          <li>programmers can do these on their own</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Exercise</h3>
+        <p>
+          Replace the multiple if block in <strong>execute_move()</strong>
+          by a more data structure that contains moves for each piece.
+        </p>
+      </section>
+
+      <section>
+        <h3>Large Refactorings</h3>
+        <ul>
+          <li>change the interface or architecture</li>
+          <li>break the tests</li>
+          <li>may take days or weeks</li>
+          <li>stakeholders need to be involved</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>Links</h3>
+        <ul>
+          <li><a href="https://refactoring.guru/refactoring">refactoring.guru/refactoring</a> - a list of refactoring techniques and code smells</li>
+        </ul>
+      </section>
+
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dōbutsu shōgi</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #b3d789;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    padding: 2rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  #sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 320px;
+    flex-shrink: 0;
+  }
+  h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+  #controls { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.5rem; width: 100%; }
+  button {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+  }
+  #status {
+    min-height: 1.5em;
+    font-size: 1.1rem;
+    font-weight: bold;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 150px);
+    grid-template-rows: repeat(4, 150px);
+    border: 4px solid #3C6F1F;
+    background: #80b940;
+    flex-shrink: 0;
+  }
+  .cell {
+    position: relative;
+    border: 1px solid #3C6F1F;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cell.selectable:hover {
+    background: rgba(255, 255, 0, 0.25);
+    cursor: pointer;
+  }
+  .cell.selected {
+    background: rgba(0, 200, 0, 0.35);
+  }
+  .piece {
+    width: 135px;
+    height: 135px;
+    border-radius: 0%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .piece.player-1 {
+    background: #fdf1d6;
+    border: 2px solid darkgray;
+    transform: rotate(180deg);
+  }
+  .piece.player--1 {
+    background: #b9d697;
+    border: 2px solid #b3d789;
+  }
+  .piece img { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h1>Dōbutsu shōgi</h1>
+  <div id="controls">
+    <button id="new-game">New game</button>
+    <button id="reset">Reset</button>
+  </div>
+  <div id="status"></div>
+  <div>
+    <h2>How to play</h2>
+    <ul>
+      <li>move pieces along the dots</li>
+      <li>get your lion to the other side</li>
+      <li>or eat the other lion</li>
+      <li>chicks that reach the other side get upgraded</li>
+    </ul>
+  </div>
+</div>
+<div id="board"></div>
+
+<script>
+const PIECE_IMAGES = {
+  lion: "images/lion_pt.svg",
+  elephant: "images/elephant_pt.svg",
+  giraffe: "images/giraffe_pt.svg",
+  chick: "images/chick_pt.svg",
+  chicken: "images/chicken_pt.svg",
+};
+
+let gameId = null;
+let field = null;
+let currentPlayer = null;
+let winner = null;
+let selected = null; // {x, y, letter}
+
+const boardEl = document.getElementById("board");
+const statusEl = document.getElementById("status");
+
+function render() {
+  boardEl.innerHTML = "";
+
+  for (let y = 0; y < 4; y++) {
+    for (let x = 0; x < 3; x++) {
+      const [piece, direction] = field[y][x];
+
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+
+      if (piece) {
+        const pieceEl = document.createElement("div");
+        pieceEl.className = `piece player-${direction}`;
+        const img = document.createElement("img");
+        img.src = PIECE_IMAGES[piece];
+        img.alt = piece;
+        pieceEl.appendChild(img);
+        cell.appendChild(pieceEl);
+      }
+
+      if (!winner) {
+        if (selected && selected.x === x && selected.y === y) {
+          cell.classList.add("selected");
+        } else if (selected || (piece && direction === currentPlayer)) {
+          cell.classList.add("selectable");
+        }
+      }
+
+      cell.addEventListener("click", () => onCellClick(x, y));
+      boardEl.appendChild(cell);
+    }
+  }
+
+  updateStatus();
+}
+
+function updateStatus() {
+  if (winner) {
+    statusEl.textContent = `${winner} player wins!`;
+  } else if (gameId) {
+    statusEl.textContent = `${currentPlayer === 1 ? "top" : "bottom"} player's turn`;
+  } else {
+    statusEl.textContent = "click \"New game\" to start";
+  }
+}
+
+async function onCellClick(x, y) {
+  if (!gameId || winner) return;
+
+  const [piece, direction] = field[y][x];
+
+  if (!selected) {
+    if (piece && direction === currentPlayer) {
+      selected = { x, y };
+      render();
+    }
+    return;
+  }
+
+  if (selected.x === x && selected.y === y) {
+    selected = null;
+    render();
+    return;
+  }
+
+  const fromX = selected.x;
+  const fromY = selected.y;
+  const playerBeforeMove = currentPlayer;
+  selected = null;
+
+  const res = await fetch(`/games/${gameId}/moves`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ from_x: fromX, from_y: fromY, to_x: x, to_y: y }),
+  });
+  const data = await res.json();
+
+  if (res.ok) {
+    field = data.field;
+    currentPlayer = data.player;
+    winner = data.winner;
+    if (!winner && currentPlayer === playerBeforeMove) {
+      statusEl.textContent = "invalid move!";
+    }
+  }
+  render();
+}
+
+async function startGame() {
+  const res = await fetch("/games", { method: "POST" });
+  const data = await res.json();
+  gameId = data.game_id;
+  field = data.field;
+  currentPlayer = data.player;
+  winner = data.winner;
+  selected = null;
+  render();
+}
+
+document.getElementById("new-game").addEventListener("click", startGame);
+document.getElementById("reset").addEventListener("click", startGame);
+</script>
+
+</body>
+</html>
