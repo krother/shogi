@@ -17,7 +17,16 @@ then visit localhost:3000 in your browser
 
 For a command line interface simply execute shogi.py.
 """
+
 MOVE_CHARS = "abcdefghijkl"
+
+# chicken moves
+LEFT = -1, 0
+RIGHT = 1, 0
+FORWARD = -1, 1
+FWD_LEFT = 0, 1
+FWD_RIGHT = 1, 1
+BACK = 0, -1
 
 
 def draw(field):
@@ -69,7 +78,7 @@ def execute_move(field, player, move):
         if field[end_y][end_x][1] is None or field[end_y][end_x][1] == -player:
             # check if move is valid
             dx = end_x - start_x
-            dy = end_y - start_y
+            dy = (end_y - start_y) * player  # reverse direction
             piece = field[start_y][start_x][0]
             if piece == "lion":
                 # moves in all directions
@@ -89,7 +98,7 @@ def execute_move(field, player, move):
                     valid = True
             elif piece == "chicken":
                 # moves everywhere but diagonally backwards
-                if (dx, dy) in [(-1, 0), (1, 0), (-1, player), (0, player), (1, player), (0, -player)]:
+                if (dx, dy) in [LEFT, RIGHT, FORWARD, FWD_LEFT, FWD_RIGHT, BACK]:
                     valid = True
         
     # apply valid move
